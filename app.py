@@ -61,7 +61,7 @@ POOLS = {
             '9': {'8': 'Kat Polesky', '7': 'Hank Trost', '0': 'Trish Brown', '1': 'Laura Leone', '5': 'Baglieri', '2': 'T.R & Darlens', '3': 'G Huch', '6': 'Kathleen Tombly', '9': 'Dawn Harriman', '4': 'Brown / Kernan'},
             '8': {'8': 'Maggy G', '7': 'Bonavita', '0': 'Mike Trom', '1': 'Liz Mills', '5': 'Charlie Leone', '2': 'Joe Tatarski', '3': 'Dave Johnson', '6': 'Mike Trom', '9': 'Trish Brown', '4': 'Alex Sporviero'},
             '3': {'8': 'Bob Fahey', '7': 'Polesky G&K', '0': 'Sheila Gonzalez', '1': 'Gina Kennedy', '5': 'George Polesky', '2': 'Todd Eastmond', '3': 'Wohltman', '6': 'Dave Leone', '9': 'Maggy G', '4': 'McEneny'},
-            '0': {'8': 'Scott Kennedy', '7': 'Wohltman', '0': 'Dave Johnson', '1': 'Kelly Kenneally', '5': 'Maggy G', '2': 'Aaron Feldman', '3': 'Kathleen Trombl', '6': 'Bonavita', '9': 'Chris DeFuria', '4': 'Beth Baccaro'},
+            '0': {'8': 'Scott Kennedy', '7': 'Wohltman', '0': 'Dave Johnson', '1': 'Kelly Kenneally', '5': 'Maggy G', '2': 'Aaron Feldman', '3': 'Kathleen Trombly', '6': 'Bonavita', '9': 'Chris DeFuria', '4': 'Beth Baccaro'},
             '2': {'8': 'K&C Laufer', '7': 'Wilder H', '0': 'Elisabth Finkena', '1': 'Huch', '5': 'Dawn Harriman', '2': 'Bob Fahey', '3': 'Logan Mills', '6': 'Isla Eastmond', '9': 'Fogarty', '4': 'Scala'},
             '1': {'8': 'McEneny', '7': 'Kim Boedart Bar', '0': 'Evertt Tatarski', '1': 'Trombly Family', '5': 'Huch', '2': 'Pat Dennin', '3': 'A&D Schuett', '6': 'Harry Tatarski', '9': 'Nick Mills', '4': 'Alex Sporviero'},
             '4': {'8': 'Baglieri', '7': 'Fogarty', '0': 'Lexi Mills', '1': 'Baglieri', '5': 'Peter Gonzalez', '2': 'Bonavita', '3': 'Scott Kennedy', '6': 'Bob Crines', '9': 'Wohltman', '4': 'Baglieri'},
