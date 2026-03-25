@@ -6,7 +6,7 @@ import pytz
 from streamlit_autorefresh import st_autorefresh
 
 # --- 1. CONFIGURATION & POOL SETUP ---
-st.set_page_config(page_title="2026 Box Pool Tracker", page_icon="🏀", layout="wide") # Switched to wide layout for columns
+st.set_page_config(page_title="2026 Box Pool Tracker", page_icon="🏀", layout="wide")
 st_autorefresh(interval=60000, limit=None, key="hoops_refresh")
 
 HISTORICAL_PROBS = {
@@ -19,6 +19,7 @@ POOLS = {
         "TITLE": "🏀 Shelly's 2026 Box Pool Tracker",
         "TOTAL_POOL": 9500,
         "EST_EVENTS": 63,
+        "DEFAULT_MODE": "Advanced", # Defaults to Advanced Mode
         "WINNER_AXIS": ['3', '2', '1', '6', '8', '9', '5', '0', '7', '4'],
         "LOSER_AXIS": ['8', '7', '3', '0', '4', '2', '9', '5', '1', '6'],
         "GRID_DATA": {
@@ -54,6 +55,7 @@ POOLS = {
         "TITLE": "🏀 MRYC 2026 Box Pool Tracker",
         "TOTAL_POOL": 1000,
         "EST_EVENTS": 17, 
+        "DEFAULT_MODE": "Standard", # Defaults to Standard Mode
         "WINNER_AXIS": ['8', '7', '0', '1', '5', '2', '3', '6', '9', '4'], 
         "LOSER_AXIS": ['5', '9', '8', '3', '0', '2', '1', '4', '7', '6'],
         "GRID_DATA": {
@@ -61,7 +63,7 @@ POOLS = {
             '9': {'8': 'Kat Polesky', '7': 'Hank Trost', '0': 'Trish Brown', '1': 'Laura Leone', '5': 'Baglieri', '2': 'T.R & Darlens', '3': 'G Huch', '6': 'Kathleen Tombly', '9': 'Dawn Harriman', '4': 'Brown / Kernan'},
             '8': {'8': 'Maggy G', '7': 'Bonavita', '0': 'Mike Trom', '1': 'Liz Mills', '5': 'Charlie Leone', '2': 'Joe Tatarski', '3': 'Dave Johnson', '6': 'Mike Trom', '9': 'Trish Brown', '4': 'Alex Sporviero'},
             '3': {'8': 'Bob Fahey', '7': 'Polesky G&K', '0': 'Sheila Gonzalez', '1': 'Gina Kennedy', '5': 'George Polesky', '2': 'Todd Eastmond', '3': 'Wohltman', '6': 'Dave Leone', '9': 'Maggy G', '4': 'McEneny'},
-            '0': {'8': 'Scott Kennedy', '7': 'Wohltman', '0': 'Dave Johnson', '1': 'Kelly Kenneally', '5': 'Maggy G', '2': 'Aaron Feldman', '3': 'Kathleen Trombly', '6': 'Bonavita', '9': 'Chris DeFuria', '4': 'Beth Baccaro'},
+            '0': {'8': 'Scott Kennedy', '7': 'Wohltman', '0': 'Dave Johnson', '1': 'Kelly Kenneally', '5': 'Maggy G', '2': 'Aaron Feldman', '3': 'Kathleen Trombl', '6': 'Bonavita', '9': 'Chris DeFuria', '4': 'Beth Baccaro'},
             '2': {'8': 'K&C Laufer', '7': 'Wilder H', '0': 'Elisabth Finkena', '1': 'Huch', '5': 'Dawn Harriman', '2': 'Bob Fahey', '3': 'Logan Mills', '6': 'Isla Eastmond', '9': 'Fogarty', '4': 'Scala'},
             '1': {'8': 'McEneny', '7': 'Kim Boedart Bar', '0': 'Evertt Tatarski', '1': 'Trombly Family', '5': 'Huch', '2': 'Pat Dennin', '3': 'A&D Schuett', '6': 'Harry Tatarski', '9': 'Nick Mills', '4': 'Alex Sporviero'},
             '4': {'8': 'Baglieri', '7': 'Fogarty', '0': 'Lexi Mills', '1': 'Baglieri', '5': 'Peter Gonzalez', '2': 'Bonavita', '3': 'Scott Kennedy', '6': 'Bob Crines', '9': 'Wohltman', '4': 'Baglieri'},
@@ -89,6 +91,10 @@ POOLS = {
 # --- DYNAMIC INITIATION VIA STREAMLIT SECRETS ---
 active_pool_id = st.secrets.get("POOL_ID", "Shelly")
 config = POOLS[active_pool_id]
+
+# Initialize the view mode in session state based on the pool's default
+if "advanced_mode" not in st.session_state:
+    st.session_state["advanced_mode"] = (config.get("DEFAULT_MODE", "Advanced") == "Advanced")
 
 # --- 2. DYNAMIC COLOR ENGINE ---
 def get_stretched_gradient(val, mx, mid):
@@ -202,7 +208,7 @@ def fetch_tournament_data(pool_config):
 st.title(config["TITLE"])
 final_data, live_data, upcoming_data = fetch_tournament_data(config)
 
-# --- GAME ACTION: LIVE & UPCOMING (SIDE-BY-SIDE) ---
+# --- GAME ACTION: LIVE & UPCOMING ---
 if live_data or upcoming_data:
     st.divider()
     st.header("🏀 Game Action")
@@ -222,10 +228,7 @@ if live_data or upcoming_data:
     with col_upcoming:
         st.subheader("📅 Upcoming Games")
         if upcoming_data:
-            # Dynamically filter out "TBD" matchups
             valid_upcoming = [g for g in upcoming_data if "TBA" not in g["Matchup"] and "TBD" not in g["Matchup"]]
-            
-            # Show up to 4 known matchups, or just 2 generic ones if none are set yet
             display_upcoming = valid_upcoming[:4] if valid_upcoming else upcoming_data[:2]
             
             for g in display_upcoming:
@@ -236,7 +239,7 @@ if live_data or upcoming_data:
         else:
             st.info("No upcoming games currently scheduled.")
 
-# --- RESULTS: STANDINGS & HISTORY (SIDE-BY-SIDE) ---
+# --- RESULTS: STANDINGS & HISTORY ---
 if final_data:
     st.divider()
     st.header("🏆 Results & History")
@@ -257,10 +260,12 @@ if final_data:
                 st.write(f"**Tip-off:** {g['Date']} at {g['DisplayTime']} ET ({g['Round']})")
                 st.write(f"**Score Context:** {g['Result']} (Win Digit: {g['W']} | Lose Digit: {g['L']})")
 
-# --- GRID & EV DATA ---
+# --- GRID & EV DATA SECTION ---
 if True: 
     st.divider()
-    st.header("📈 Heatmap & Expected Value")
+    
+    # Toggle for Advanced vs Standard Mode
+    is_advanced = st.toggle("🔥 Advanced Mode (Projections & Heatmap)", key="advanced_mode")
     
     events_played = len(final_data)
     awarded_prizes = sum(g['Payout'] for g in final_data)
@@ -272,12 +277,57 @@ if True:
     
     max_w, mid_w = win_counts.max() or 1, win_counts.median() or (win_counts.max() / 2)
     max_l, mid_l = lose_counts.max() or 1, lose_counts.median() or (lose_counts.max() / 2)
-    
+
     st.write(f"**Total Prize Pool Remaining:** ${remaining_pool:,.2f}")
 
-    with st.expander("ℹ️ What does 'Est: $' mean? (Click to read)"):
-        st.write("This is the mathematically projected final value of your box. It adds your current winnings to your expected future winnings. Future winnings are calculated by dynamically blending Historical NCAA Probabilities with the Current Tournament Hit Rates as more games are played.")
+    if is_advanced:
+        st.header("📈 Heatmap & Expected Value")
+        
+        # Display Fire & Ice Digits only in Advanced Mode
+        st.subheader("🔥 Fire & ❄️ Ice Digits")
+        st.markdown("##### Winner Team Score")
+        w_sorted = win_counts.sort_values(ascending=False)
+        col1, col2 = st.columns(2)
+        with col1:
+            html_h = "<div style='display:flex; gap:8px; flex-wrap:wrap;'>"
+            for digit, count in w_sorted.head(5).items():
+                bg, tx = get_stretched_gradient(count, max_w, mid_w)
+                html_h += f"<div style='background:{bg}; color:{tx}; padding:8px 12px; border-radius:6px; border:1px solid rgba(128,128,128,0.3);'><b>{digit}</b> ({count})</div>"
+            html_h += "</div>"
+            st.markdown(html_h, unsafe_allow_html=True)
+        with col2:
+            html_c = "<div style='display:flex; gap:8px; flex-wrap:wrap;'>"
+            for digit, count in w_sorted.tail(5).items():
+                bg, tx = get_stretched_gradient(count, max_w, mid_w)
+                html_c += f"<div style='background:{bg}; color:{tx}; padding:8px 12px; border-radius:6px; border:1px solid rgba(128,128,128,0.3);'><b>{digit}</b> ({count})</div>"
+            html_c += "</div>"
+            st.markdown(html_c, unsafe_allow_html=True)
+            
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("##### Loser Team Score")
+        l_sorted = lose_counts.sort_values(ascending=False)
+        col3, col4 = st.columns(2)
+        with col3:
+            html_h = "<div style='display:flex; gap:8px; flex-wrap:wrap;'>"
+            for digit, count in l_sorted.head(5).items():
+                bg, tx = get_stretched_gradient(count, max_l, mid_l)
+                html_h += f"<div style='background:{bg}; color:{tx}; padding:8px 12px; border-radius:6px; border:1px solid rgba(128,128,128,0.3);'><b>{digit}</b> ({count})</div>"
+            html_h += "</div>"
+            st.markdown(html_h, unsafe_allow_html=True)
+        with col4:
+            html_c = "<div style='display:flex; gap:8px; flex-wrap:wrap;'>"
+            for digit, count in l_sorted.tail(5).items():
+                bg, tx = get_stretched_gradient(count, max_l, mid_l)
+                html_c += f"<div style='background:{bg}; color:{tx}; padding:8px 12px; border-radius:6px; border:1px solid rgba(128,128,128,0.3);'><b>{digit}</b> ({count})</div>"
+            html_c += "</div>"
+            st.markdown(html_c, unsafe_allow_html=True)
+
+        with st.expander("ℹ️ What does 'Est: $' mean? (Click to read)"):
+            st.write("This is the mathematically projected final value of your box. It adds your current winnings to your expected future winnings. Future winnings are calculated by dynamically blending Historical NCAA Probabilities with the Current Tournament Hit Rates as more games are played.")
+    else:
+        st.header("📊 Box Pool Grid")
     
+    # Calculate Base Grid Math
     heatmap_wins = pd.DataFrame(0, index=config["LOSER_AXIS"], columns=config["WINNER_AXIS"])
     for g in final_data: heatmap_wins.at[g['L'], g['W']] += 1
     max_win = heatmap_wins.max().max() or 1
@@ -294,44 +344,67 @@ if True:
     <div class='grid-container'><table class='mm-table'>
     """
 
+    # Top Axis (Winner)
     html_grid += "<tr><td colspan='2' style='border:none;'></td><td colspan='10' class='header-main'>GAME WINNER</td></tr>"
     html_grid += "<tr><td colspan='2' style='border:none;'></td>"
     for i in config["WINNER_AXIS"]:
-        bg, tx = get_stretched_gradient(win_counts[i], max_w, mid_w)
+        if is_advanced:
+            bg, tx = get_stretched_gradient(win_counts[i], max_w, mid_w)
+        else:
+            bg, tx = "rgba(128, 128, 128, 0.2)", "inherit"
         html_grid += f"<td style='background:{bg}; color:{tx}; font-weight:bold;'>{i}</td>"
     html_grid += "</tr>"
 
+    # Side Axis (Loser) & Grid Cells
     for idx, r in enumerate(config["LOSER_AXIS"]):
         html_grid += "<tr>"
         if idx == 0: html_grid += f"<td rowspan='10' class='side-label'>GAME LOSER</td>"
-        bg_l, tx_l = get_stretched_gradient(lose_counts[r], max_l, mid_l)
+        
+        if is_advanced:
+            bg_l, tx_l = get_stretched_gradient(lose_counts[r], max_l, mid_l)
+        else:
+            bg_l, tx_l = "rgba(128, 128, 128, 0.2)", "inherit"
+            
         html_grid += f"<td style='background:{bg_l}; color:{tx_l}; font-weight:bold;'>{r}</td>"
         
         for c in config["WINNER_AXIS"]:
             wins = heatmap_wins.at[r, c]
-            bg_cell, tx_cell = get_stretched_gradient(wins, max_win, mid_win) if wins > 0 else ("rgba(128,128,128,0.05)", "inherit")
             owner = config['GRID_DATA'].get(str(r), {}).get(str(c), "??")
-            
-            weight_current = min(events_played / config["EST_EVENTS"], 1.0)
-            weight_hist = 1.0 - weight_current
-            
-            p_win_current = win_counts[c] / events_played if events_played > 0 else 0
-            p_win_blended = (p_win_current * weight_current) + (HISTORICAL_PROBS[c] * weight_hist)
-            
-            p_lose_current = lose_counts[r] / events_played if events_played > 0 else 0
-            p_lose_blended = (p_lose_current * weight_current) + (HISTORICAL_PROBS[r] * weight_hist)
-            
-            p_box = p_win_blended * p_lose_blended
-            projected_future_value = p_box * remaining_pool
-                
             current_earned = sum(g['Payout'] for g in final_data if g['W'] == c and g['L'] == r)
-            total_ev = current_earned + projected_future_value
             
-            html_grid += f"<td style='background:{bg_cell}; color:{tx_cell}; min-width:85px; height:60px;'>"
-            html_grid += f"<b>{owner}</b>"
-            if wins > 0: html_grid += f"<br><span style='font-size: 0.65rem; opacity: 0.8;'>({wins} Hits)</span>"
-            html_grid += f"<br><span style='font-size: 0.85rem; font-weight: 800;'>Est: ${total_ev:.2f}</span>"
-            html_grid += "</td>"
+            # Apply styling based on toggle
+            if is_advanced:
+                bg_cell, tx_cell = get_stretched_gradient(wins, max_win, mid_win) if wins > 0 else ("rgba(128,128,128,0.05)", "inherit")
+                
+                weight_current = min(events_played / config["EST_EVENTS"], 1.0)
+                weight_hist = 1.0 - weight_current
+                
+                p_win_current = win_counts[c] / events_played if events_played > 0 else 0
+                p_win_blended = (p_win_current * weight_current) + (HISTORICAL_PROBS[c] * weight_hist)
+                
+                p_lose_current = lose_counts[r] / events_played if events_played > 0 else 0
+                p_lose_blended = (p_lose_current * weight_current) + (HISTORICAL_PROBS[r] * weight_hist)
+                
+                p_box = p_win_blended * p_lose_blended
+                projected_future_value = p_box * remaining_pool
+                total_ev = current_earned + projected_future_value
+                
+                html_grid += f"<td style='background:{bg_cell}; color:{tx_cell}; min-width:85px; height:60px;'>"
+                html_grid += f"<b>{owner}</b>"
+                if wins > 0: html_grid += f"<br><span style='font-size: 0.65rem; opacity: 0.8;'>({wins} Hits)</span>"
+                html_grid += f"<br><span style='font-size: 0.85rem; font-weight: 800;'>Est: ${total_ev:.2f}</span>"
+                html_grid += "</td>"
+            else:
+                # Standard Mode Layout
+                bg_cell = "rgba(128,128,128,0.05)"
+                tx_cell = "inherit"
+                
+                html_grid += f"<td style='background:{bg_cell}; color:{tx_cell}; min-width:85px; height:60px;'>"
+                html_grid += f"<b>{owner}</b>"
+                if current_earned > 0:
+                    html_grid += f"<br><span style='color: #2e7d32; font-size: 0.9rem; font-weight: 800;'>Won: ${current_earned}</span>"
+                html_grid += "</td>"
+                
         html_grid += "</tr>"
     html_grid += "</table></div>"
     st.markdown(html_grid, unsafe_allow_html=True)
